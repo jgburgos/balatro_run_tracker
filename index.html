@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>Balatro Run Tracker</title>
+  <style>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    *, *::before, *::after {
+   box-sizing: border-box;
+}
+    :root { --border:#e6e6e6; --muted:#666; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; }
+    h1 { margin: 0 0 10px 0; font-size: 22px; }
+    .grid { display: grid; grid-template-columns: 560px 1fr; gap: 16px; align-items: start; }
+    .card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; margin: 8px 0; align-items: center; }
+    label { color: var(--muted); font-size: 12px; }
+    input[type='date'], input[type='text'], select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+    button { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #fff; }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    button.danger { border-color: #d33; color: #d33; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
+    th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .thumb { width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #fafafa; }
+    .pill { display: inline-flex; align-items: flex-start; gap: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px 6px 6px; margin: 3px 6px 3px 0; background: #fff; }
+    .pill span { font-size: 12px; }
+    .deckCell { display: inline-flex; align-items: center; gap: 10px; }
+    .toolbar { display: flex; gap: 8px; align-items: center; margin: 10px 0 0; flex-wrap: wrap; }
+    .search { flex: 1; min-width: 240px; }
+    .small { font-size: 12px; color: var(--muted); }
+/* === Joker picker layout (known-good) === */
+.jokerPicker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.runJokerCard {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 6px 4px 0;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+
+  width: 100px; /* controls wrapping consistency */
+}
+.editionBadge{
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: #444;
+  background: #fafafa;
+  text-transform: capitalize;
+}
+.runJokerName {
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.15;
+
+  /* prevent table blowout */
+  word-break: break-word;
+}
+
+.actionsCell { white-space: nowrap; }
+.moveBtn { width: 32px; padding: 6px 0; }
+.editBtn { padding: 6px 10px; }
+
+.jokerBtn {
+  box-sizing: border-box;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+
+  padding: 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+
+  overflow: hidden; /* prevents name bleed */
+}
+
+.jokerBtn:hover { border-color: #bbb; }
+
+.jokerBtn .thumb {
+  display: block;
+  width: 50px;
+  height: 70px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.jokerBtn .name {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.15;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  overflow: hidden; /* ensures no bleed */
+}
+.cardThumb {
+  width: 80px;
+  height: calc(80px * 1.4); /* playing-card aspect */
+  object-fit: contain;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+/* --- Sticker overlay (reusable) --- */
+.cardWrap {
+position: relative;
+display: inline-block;
+}
+
+
+.sticker {
+  position: absolute;
+  inset: 0;              /* top:0; right:0; bottom:0; left:0 */
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* keep the sticker canvas aligned */
+  pointer-events: none;
+}
+
+
+/* --- Modal --- */
+.modalBackdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;              /* <-- KEY: hidden until opened */
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 999;
+}
+
+
+.modalCard {
+width: min(640px, 96vw);
+background: #fff;
+border: 1px solid var(--border);
+border-radius: 12px;
+box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+
+
+.modalHeader {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 12px;
+border-bottom: 1px solid var(--border);
+}
+
+
+.modalTitle { font-size: 14px; font-weight: 700; }
+
+
+.modalCloseBtn {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;   /* important */
+}
+
+
+
+.modalBody {
+display: grid;
+grid-template-columns: 180px 1fr;
+gap: 14px;
+padding: 12px;
+align-items: start;
+}
+
+
+.modalPreview {
+display: flex;
+justify-content: center;
+align-items: center;
+}
+.modalGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.modalCol{
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.modalLabel{
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.optRow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px;
+  border-radius: 10px;
+  user-select: none;
+}
+
+.optRow:hover{ background: #f6f6f6; }
+
+.optRow input[type='checkbox'],
+.optRow input[type='radio']{
+  transform: scale(1.1);
+}
+
+
+.modalSectionTitle {
+font-size: 12px;
+font-weight: 700;
+color: var(--muted);
+margin-bottom: 6px;
+}
+
+#selectedJokers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.checkRow {
+display: flex;
+align-items: center;
+}
+
+/* --- Mobile responsive --- */
+@media (max-width: 820px) {
+  body { margin: 12px; }
+  .grid { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 1fr; }
+  label { margin-bottom: 6px; display: block; }
+  .jokerPicker { max-height: 45vh; }
+  table { display: block; overflow-x: auto; }
+  th, td { padding: 8px; }
+}
+
+ 
+    .selectedBox { border: 1px dashed #aaa; border-radius: 10px; padding: 8px; min-height: 54px; }
+    .selectedBox .empty { color: var(--muted); font-size: 12px; }
+    .deckPreviewName { font-size: 15px; color: #222; }
+  </style>
+</head>
+<body>
+  <h1>Balatro Gold Stake Tracker</h1>
+
+  <div class='grid'>
+    <div class='card'>
+      <div class='row'>
+        <label for='runDate'>Date</label>
+        <input id='runDate' type='date' />
+      </div>
+
+<div class='row' style='align-items:start;'>
+  <label for='deckSelect'>Deck</label>
+  <div>
+    <select id='deckSelect'></select>
+    <div id='deckPreview' class='hint' style='margin-top:8px; display:flex; align-items:center; gap:10px;'></div>
+  </div>
+</div>
+
+      <div class='row'>
+        <label>Selected Jokers</label>
+        <div class='selectedBox' id='selectedJokers'></div>
+      </div>
+
+      <div class='row' style='align-items:start;'>
+        <label>Pick Jokers</label>
+        <div>
+          <input id='jokerFilter' type='text' placeholder='Search Jokers' />
+          <div class='hint'>Click a joker to add. Click a selected joker pill to remove.</div>
+          <div class='jokerPicker' id='jokerPicker'></div>
+        </div>
+      </div>
+
+      
+      <div class='toolbar'>
+        <button class='primary' id='addRunBtn'>Add Run</button>
+        <button id='exportBtn'>Export JSON</button>
+        <button id='importBtn'>Import JSON</button>
+        <input id='importFile' type='file' accept='application/json' style='display:none;' />
+      </div>
+
+      <div class='hint'>
+        Data is stored locally in your browser (offline). Export/import lets you back it up or move machines.
+      </div>
+    </div>
+
+    <div class='card'>
+      <div class='toolbar'>
+        <input class='search' id='tableFilter' type='text' placeholder='Search runs (deck/jokers/date)...' />
+        <button class='danger' id='clearAllBtn'>Clear All</button>
+      </div>
+      <div class='small' id='statsLine' style='margin: 8px 0 0;'></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style='width:70px;'>Run</th>
+            <th style='width:120px;'>Date</th>
+            <th>Jokers</th>
+            <th style='width:220px;'>Deck</th>
+            <th style='width:160px;'>Actions</th>
+           
+          </tr>
+        </thead>
+        <tbody id='runsTbody'></tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+<div class='modalBackdrop' id='jokerModalBackdrop'>
+  <div class='modalCard' role='dialog' aria-modal='true'>
+    <div class='modalHeader'>
+      <div class='modalTitle'>Add Joker</div>
+      <button type='button' class='modalCloseBtn' id='jokerModalClose' aria-label='Close'>×</button>
+    </div>
+
+    <div class='modalBody'>
+      <div class='modalPreview' id='jokerModalPreview'></div>
+
+      <div>
+<div class='modalGrid'>
+  <div class='modalCol'>
+    <div class='modalLabel'>Stickers</div>
+
+    <label class='optRow'>
+      <input type='checkbox' id='tagPerishable' />
+      <span>Perishable</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='checkbox' id='tagEternal' />
+      <span>Eternal</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='checkbox' id='tagRental' />
+      <span>Rental</span>
+    </label>
+  </div>
+
+  <div class='modalCol'>
+    <div class='modalLabel'>Edition</div>
+
+    <label class='optRow'>
+      <input type='radio' name='edition' value='base' checked />
+      <span>Base</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='radio' name='edition' value='foil' />
+      <span>Foil</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='radio' name='edition' value='holographic' />
+      <span>Holographic</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='radio' name='edition' value='polychrome' />
+      <span>Polychrome</span>
+    </label>
+
+    <label class='optRow'>
+      <input type='radio' name='edition' value='negative' />
+      <span>Negative</span>
+    </label>
+  </div>
+</div>
+        </div>
+
+        <div style='margin-top:12px; display:flex; justify-content:flex-end; gap:8px;'>
+          <button type='button' id='jokerModalAdd' class='primary'>Add Joker</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+
+  // -----------------------------
+  // 1) Configure your assets here
+  // -----------------------------
+  // Update these lists to match your PNG filenames.
+  // Tip: keep ids stable; names can be changed anytime.
+const DECKS = [
+  {"id": 1, "name": "Red", "img": "assets/decks/1_red_deck.png"},
+  {"id": 2, "name": "Blue", "img": "assets/decks/2_blue_deck.png"},
+  {"id": 3, "name": "Yellow", "img": "assets/decks/3_yellow_deck.png"},
+  {"id": 4, "name": "Green", "img": "assets/decks/4_green_deck.png"},
+  {"id": 5, "name": "Black", "img": "assets/decks/5_black_deck.png"},
+  {"id": 6, "name": "Magic", "img": "assets/decks/6_magic_deck.png"},
+  {"id": 7, "name": "Nebula", "img": "assets/decks/7_nebula_deck.png"},
+  {"id": 8, "name": "Ghost", "img": "assets/decks/8_ghost_deck.png"},
+  {"id": 9, "name": "Abandoned", "img": "assets/decks/9_abandoned_deck.png"},
+  {"id": 10, "name": "Checkered", "img": "assets/decks/10_checkered_deck.png"},
+  {"id": 11, "name": "Zodiac", "img": "assets/decks/11_zodiac_deck.png"},
+  {"id": 12, "name": "Painted", "img": "assets/decks/12_painted_deck.png"},
+  {"id": 13, "name": "Anaglyph", "img": "assets/decks/13_anaglyph_deck.png"},
+  {"id": 14, "name": "Plasma", "img": "assets/decks/14_plasma_deck.png"},
+  {"id": 15, "name": "Erratic", "img": "assets/decks/15_erratic_deck.png"},
+];
+
+const JOKERS = [
+  {"id": 1, "name": "Joker", "img": "assets/jokers/base/1_joker.png"},
+  {"id": 2, "name": "Greedy Joker", "img": "assets/jokers/base/2_greedy_joker.png"},
+  {"id": 3, "name": "Lusty Joker", "img": "assets/jokers/base/3_lusty_joker.png"},
+  {"id": 4, "name": "Wrathful Joker", "img": "assets/jokers/base/4_wrathful_joker.png"},
+  {"id": 5, "name": "Gluttonous Joker", "img": "assets/jokers/base/5_gluttonous_joker.png"},
+  {"id": 6, "name": "Jolly Joker", "img": "assets/jokers/base/6_jolly_joker.png"},
+  {"id": 7, "name": "Zany Joker", "img": "assets/jokers/base/7_zany_joker.png"},
+  {"id": 8, "name": "Mad Joker", "img": "assets/jokers/base/8_mad_joker.png"},
+  {"id": 9, "name": "Crazy Joker", "img": "assets/jokers/base/9_crazy_joker.png"},
+  {"id": 10, "name": "Droll Joker", "img": "assets/jokers/base/10_droll_joker.png"},
+  {"id": 11, "name": "Sly Joker", "img": "assets/jokers/base/11_sly_joker.png"},
+  {"id": 12, "name": "Wily Joker", "img": "assets/jokers/base/12_wily_joker.png"},
+  {"id": 13, "name": "Clever Joker", "img": "assets/jokers/base/13_clever_joker.png"},
+  {"id": 14, "name": "Devious Joker", "img": "assets/jokers/base/14_devious_joker.png"},
+  {"id": 15, "name": "Crafty Joker", "img": "assets/jokers/base/15_crafty_joker.png"},
+  {"id": 16, "name": "Half Joker", "img": "assets/jokers/base/16_half_joker.png"},
+  {"id": 17, "name": "Joker Stencil", "img": "assets/jokers/base/17_joker_stencil.png"},
+  {"id": 18, "name": "Four Fingers", "img": "assets/jokers/base/18_four_fingers.png"},
+  {"id": 19, "name": "Mime", "img": "assets/jokers/base/19_mime.png"},
+  {"id": 20, "name": "Credit Card", "img": "assets/jokers/base/20_credit_card.png"},
+  {"id": 21, "name": "Ceremonial Dagger", "img": "assets/jokers/base/21_ceremonial_dagger.png"},
+  {"id": 22, "name": "Banner", "img": "assets/jokers/base/22_banner.png"},
+  {"id": 23, "name": "Mystic Summit", "img": "assets/jokers/base/23_mystic_summit.png"},
+  {"id": 24, "name": "Marble Joker", "img": "assets/jokers/base/24_marble_joker.png"},
+  {"id": 25, "name": "Loyalty Card", "img": "assets/jokers/base/25_loyalty_card.png"},
+  {"id": 26, "name": "8 Ball", "img": "assets/jokers/base/26_8_ball.png"},
+  {"id": 27, "name": "Misprint", "img": "assets/jokers/base/27_misprint.png"},
+  {"id": 28, "name": "Dusk", "img": "assets/jokers/base/28_dusk.png"},
+  {"id": 29, "name": "Raised Fist", "img": "assets/jokers/base/29_raised_fist.png"},
+  {"id": 30, "name": "Chaos The Clown", "img": "assets/jokers/base/30_chaos_the_clown.png"},
+  {"id": 31, "name": "Fibonacci", "img": "assets/jokers/base/31_fibonacci.png"},
+  {"id": 32, "name": "Steel Joker", "img": "assets/jokers/base/32_steel_joker.png"},
+  {"id": 33, "name": "Scary Face", "img": "assets/jokers/base/33_scary_face.png"},
+  {"id": 34, "name": "Abstract Joker", "img": "assets/jokers/base/34_abstract_joker.png"},
+  {"id": 35, "name": "Delayed Gratification", "img": "assets/jokers/base/35_delayed_gratification.png"},
+  {"id": 36, "name": "Hack", "img": "assets/jokers/base/36_hack.png"},
+  {"id": 37, "name": "Pareidolia", "img": "assets/jokers/base/37_pareidolia.png"},
+  {"id": 38, "name": "Gros Michel", "img": "assets/jokers/base/38_gros_michel.png"},
+  {"id": 39, "name": "Even Steven", "img": "assets/jokers/base/39_even_steven.png"},
+  {"id": 40, "name": "Odd Todd", "img": "assets/jokers/base/40_odd_todd.png"},
+  {"id": 41, "name": "Scholar", "img": "assets/jokers/base/41_scholar.png"},
+  {"id": 42, "name": "Business Card", "img": "assets/jokers/base/42_business_card.png"},
+  {"id": 43, "name": "Supernova", "img": "assets/jokers/base/43_supernova.png"},
+  {"id": 44, "name": "Ride The Bus", "img": "assets/jokers/base/44_ride_the_bus.png"},
+  {"id": 45, "name": "Space Joker", "img": "assets/jokers/base/45_space_joker.png"},
+  {"id": 46, "name": "Egg", "img": "assets/jokers/base/46_egg.png"},
+  {"id": 47, "name": "Burglar", "img": "assets/jokers/base/47_burglar.png"},
+  {"id": 48, "name": "Blackboard", "img": "assets/jokers/base/48_blackboard.png"},
+  {"id": 49, "name": "Runner", "img": "assets/jokers/base/49_runner.png"},
+  {"id": 50, "name": "Ice Cream", "img": "assets/jokers/base/50_ice_cream.png"},
+  {"id": 51, "name": "Dna", "img": "assets/jokers/base/51_dna.png"},
+  {"id": 52, "name": "Splash", "img": "assets/jokers/base/52_splash.png"},
+  {"id": 53, "name": "Blue Joker", "img": "assets/jokers/base/53_blue_joker.png"},
+  {"id": 54, "name": "Sixth Sense", "img": "assets/jokers/base/54_sixth_sense.png"},
+  {"id": 55, "name": "Constellation", "img": "assets/jokers/base/55_constellation.png"},
+  {"id": 56, "name": "Hiker", "img": "assets/jokers/base/56_hiker.png"},
+  {"id": 57, "name": "Faceless Joker", "img": "assets/jokers/base/57_faceless_joker.png"},
+  {"id": 58, "name": "Green Joker", "img": "assets/jokers/base/58_green_joker.png"},
+  {"id": 59, "name": "Superposition", "img": "assets/jokers/base/59_superposition.png"},
+  {"id": 60, "name": "To Do List", "img": "assets/jokers/base/60_to_do_list.png"},
+  {"id": 61, "name": "Cavendish", "img": "assets/jokers/base/61_cavendish.png"},
+  {"id": 62, "name": "Card Sharp", "img": "assets/jokers/base/62_card_sharp.png"},
+  {"id": 63, "name": "Red Card", "img": "assets/jokers/base/63_red_card.png"},
+  {"id": 64, "name": "Madness", "img": "assets/jokers/base/64_madness.png"},
+  {"id": 65, "name": "Square Joker", "img": "assets/jokers/base/65_square_joker.png"},
+  {"id": 66, "name": "Séance", "img": "assets/jokers/base/66_sance.png"},
+  {"id": 67, "name": "Riff-Raff", "img": "assets/jokers/base/67_riff-raff.png"},
+  {"id": 68, "name": "Vampire", "img": "assets/jokers/base/68_vampire.png"},
+  {"id": 69, "name": "Shortcut", "img": "assets/jokers/base/69_shortcut.png"},
+  {"id": 70, "name": "Hologram", "img": "assets/jokers/base/70_hologram.png"},
+  {"id": 71, "name": "Vagabond", "img": "assets/jokers/base/71_vagabond.png"},
+  {"id": 72, "name": "Baron", "img": "assets/jokers/base/72_baron.png"},
+  {"id": 73, "name": "Cloud 9", "img": "assets/jokers/base/73_cloud_9.png"},
+  {"id": 74, "name": "Rocket", "img": "assets/jokers/base/74_rocket.png"},
+  {"id": 75, "name": "Obelisk", "img": "assets/jokers/base/75_obelisk.png"},
+  {"id": 76, "name": "Midas Mask", "img": "assets/jokers/base/76_midas_mask.png"},
+  {"id": 77, "name": "Luchador", "img": "assets/jokers/base/77_luchador.png"},
+  {"id": 78, "name": "Photograph", "img": "assets/jokers/base/78_photograph.png"},
+  {"id": 79, "name": "Gift Card", "img": "assets/jokers/base/79_gift_card.png"},
+  {"id": 80, "name": "Turtle Bean", "img": "assets/jokers/base/80_turtle_bean.png"},
+  {"id": 81, "name": "Erosion", "img": "assets/jokers/base/81_erosion.png"},
+  {"id": 82, "name": "Reserved Parking", "img": "assets/jokers/base/82_reserved_parking.png"},
+  {"id": 83, "name": "Mail-In Rebate", "img": "assets/jokers/base/83_mail-in_rebate.png"},
+  {"id": 84, "name": "To The Moon", "img": "assets/jokers/base/84_to_the_moon.png"},
+  {"id": 85, "name": "Hallucination", "img": "assets/jokers/base/85_hallucination.png"},
+  {"id": 86, "name": "Fortune Teller", "img": "assets/jokers/base/86_fortune_teller.png"},
+  {"id": 87, "name": "Juggler", "img": "assets/jokers/base/87_juggler.png"},
+  {"id": 88, "name": "Drunkard", "img": "assets/jokers/base/88_drunkard.png"},
+  {"id": 89, "name": "Stone Joker", "img": "assets/jokers/base/89_stone_joker.png"},
+  {"id": 90, "name": "Golden Joker", "img": "assets/jokers/base/90_golden_joker.png"},
+  {"id": 91, "name": "Lucky Cat", "img": "assets/jokers/base/91_lucky_cat.png"},
+  {"id": 92, "name": "Baseball Card", "img": "assets/jokers/base/92_baseball_card.png"},
+  {"id": 93, "name": "Bull", "img": "assets/jokers/base/93_bull.png"},
+  {"id": 94, "name": "Diet Cola", "img": "assets/jokers/base/94_diet_cola.png"},
+  {"id": 95, "name": "Trading Card", "img": "assets/jokers/base/95_trading_card.png"},
+  {"id": 96, "name": "Flash Card", "img": "assets/jokers/base/96_flash_card.png"},
+  {"id": 97, "name": "Popcorn", "img": "assets/jokers/base/97_popcorn.png"},
+  {"id": 98, "name": "Spare Trousers", "img": "assets/jokers/base/98_spare_trousers.png"},
+  {"id": 99, "name": "Ancient Joker", "img": "assets/jokers/base/99_ancient_joker.png"},
+  {"id": 100, "name": "Ramen", "img": "assets/jokers/base/100_ramen.png"},
+  {"id": 101, "name": "Walkie Talkie", "img": "assets/jokers/base/101_walkie_talkie.png"},
+  {"id": 102, "name": "Seltzer", "img": "assets/jokers/base/102_seltzer.png"},
+  {"id": 103, "name": "Castle", "img": "assets/jokers/base/103_castle.png"},
+  {"id": 104, "name": "Smiley Face", "img": "assets/jokers/base/104_smiley_face.png"},
+  {"id": 105, "name": "Campfire", "img": "assets/jokers/base/105_campfire.png"},
+  {"id": 106, "name": "Golden Ticket", "img": "assets/jokers/base/106_golden_ticket.png"},
+  {"id": 107, "name": "Mr. Bones", "img": "assets/jokers/base/107_mr_bones.png"},
+  {"id": 108, "name": "Acrobat", "img": "assets/jokers/base/108_acrobat.png"},
+  {"id": 109, "name": "Sock And Buskin", "img": "assets/jokers/base/109_sock_and_buskin.png"},
+  {"id": 110, "name": "Swashbuckler", "img": "assets/jokers/base/110_swashbuckler.png"},
+  {"id": 111, "name": "Troubadour", "img": "assets/jokers/base/111_troubadour.png"},
+  {"id": 112, "name": "Certificate", "img": "assets/jokers/base/112_certificate.png"},
+  {"id": 113, "name": "Smeared Joker", "img": "assets/jokers/base/113_smeared_joker.png"},
+  {"id": 114, "name": "Throwback", "img": "assets/jokers/base/114_throwback.png"},
+  {"id": 115, "name": "Hanging Chad", "img": "assets/jokers/base/115_hanging_chad.png"},
+  {"id": 116, "name": "Rough Gem", "img": "assets/jokers/base/116_rough_gem.png"},
+  {"id": 117, "name": "Bloodstone", "img": "assets/jokers/base/117_bloodstone.png"},
+  {"id": 118, "name": "Arrowhead", "img": "assets/jokers/base/118_arrowhead.png"},
+  {"id": 119, "name": "Onyx Agate", "img": "assets/jokers/base/119_onyx_agate.png"},
+  {"id": 120, "name": "Glass Joker", "img": "assets/jokers/base/120_glass_joker.png"},
+  {"id": 121, "name": "Showman", "img": "assets/jokers/base/121_showman.png"},
+  {"id": 122, "name": "Flower Pot", "img": "assets/jokers/base/122_flower_pot.png"},
+  {"id": 123, "name": "Blueprint", "img": "assets/jokers/base/123_blueprint.png"},
+  {"id": 124, "name": "Wee Joker", "img": "assets/jokers/base/124_wee_joker.png"},
+  {"id": 125, "name": "Merry Andy", "img": "assets/jokers/base/125_merry_andy.png"},
+  {"id": 126, "name": "Oops! All 6s", "img": "assets/jokers/base/126_oops_all_6s.png"},
+  {"id": 127, "name": "The Idol", "img": "assets/jokers/base/127_the_idol.png"},
+  {"id": 128, "name": "Seeing Double", "img": "assets/jokers/base/128_seeing_double.png"},
+  {"id": 129, "name": "Matador", "img": "assets/jokers/base/129_matador.png"},
+  {"id": 130, "name": "Hit the Road", "img": "assets/jokers/base/130_hit_the_road.png"},
+  {"id": 131, "name": "The Duo", "img": "assets/jokers/base/131_the_duo.png"},
+  {"id": 132, "name": "The Trio", "img": "assets/jokers/base/132_the_trio.png"},
+  {"id": 133, "name": "The Family", "img": "assets/jokers/base/133_the_family.png"},
+  {"id": 134, "name": "The Order", "img": "assets/jokers/base/134_the_order.png"},
+  {"id": 135, "name": "The Tribe", "img": "assets/jokers/base/135_the_tribe.png"},
+  {"id": 136, "name": "Stuntman", "img": "assets/jokers/base/136_stuntman.png"},
+  {"id": 137, "name": "Invisible Joker", "img": "assets/jokers/base/137_invisible_joker.png"},
+  {"id": 138, "name": "Brainstorm", "img": "assets/jokers/base/138_brainstorm.png"},
+  {"id": 139, "name": "Satellite", "img": "assets/jokers/base/139_satellite.png"},
+  {"id": 140, "name": "Shoot The Moon", "img": "assets/jokers/base/140_shoot_the_moon.png"},
+  {"id": 141, "name": "Driver's License", "img": "assets/jokers/base/141_drivers_license.png"},
+  {"id": 142, "name": "Cartomancer", "img": "assets/jokers/base/142_cartomancer.png"},
+  {"id": 143, "name": "Astronomer", "img": "assets/jokers/base/143_astronomer.png"},
+  {"id": 144, "name": "Burnt Joker", "img": "assets/jokers/base/144_burnt_joker.png"},
+  {"id": 145, "name": "Bootstraps", "img": "assets/jokers/base/145_bootstraps.png"},
+  {"id": 146, "name": "Canio", "img": "assets/jokers/base/146_canio.png"},
+  {"id": 147, "name": "Triboulet", "img": "assets/jokers/base/147_triboulet.png"},
+  {"id": 148, "name": "Yorick", "img": "assets/jokers/base/148_yorick.png"},
+  {"id": 149, "name": "Chicot", "img": "assets/jokers/base/149_chicot.png"},
+  {"id": 150, "name": "Perkeo", "img": "assets/jokers/base/150_perkeo.png"},
+];
+  const STICKERS = {
+  perishable: { name: 'Perishable', img: 'assets/stickers/perishable.png' },
+  eternal: { name: 'Eternal', img: 'assets/stickers/eternal.png' },
+  rental: { name: 'Rental', img: 'assets/stickers/rental.png' }
+};
+  // -----------------------------
+  // 2) Storage + helpers
+  // -----------------------------
+  const STORAGE_KEY = 'balatro_runs_v1';
+  
+  function normId(v) {
+    return String(v ?? '');
+  }
+
+
+  function renumberRunsSequential() {
+  // Based on current array order
+  const n = runs.length
+  runs.forEach((r, i) => { r.runNumber = n - i; });
+}
+
+function moveRun(id, dir) {
+  const idx = runs.findIndex(r => r.id === id);
+  if (idx < 0) return;
+
+  const newIdx = dir === 'up' ? idx - 1 : idx + 1;
+  if (newIdx < 0 || newIdx >= runs.length) return;
+
+  // swap in-array (this changes display order since you render in array order)
+  const tmp = runs[idx];
+  runs[idx] = runs[newIdx];
+  runs[newIdx] = tmp;
+
+  renumberRunsSequential();   // now numbering matches your newest-first layout
+  saveRuns(runs);
+  renderRunsTable();
+}
+
+
+let editingRunId = null;
+
+function startEditRun(id) {
+  const r = runs.find(x => x.id === id);
+  if (!r) return;
+
+  editingRunId = id;
+
+  runDate.value = r.date || '';
+  deckSelect.value = r.deckId || '';
+  renderDeckPreview();
+
+  selectedJokers = Array.isArray(r.jokers) ? r.jokers.slice() : [];
+  renderSelectedJokers();
+
+  document.getElementById('addRunBtn').textContent = 'Save Changes';
+}
+
+  function jokerFilenameFromBasePath(baseImgPath) {
+  // e.g. 'assets/jokers/base/100_ramen.png' -> '100_ramen.png'
+  return String(baseImgPath || '').split('/').pop();
+}
+
+
+function getEditionImgPath(jokerId, edition) {
+  const j = JOKERS.find(x => normId(x.id) === normId(jokerId));
+  if (!j) return '';
+
+  const ed = (edition || 'base').toLowerCase();
+  const file = jokerFilenameFromBasePath(j.img);
+
+  // If your JOKERS img already points to base, that’s fine; we always build by folder.
+  return `assets/jokers/${ed}/${file}`;
+}
+
+function getSelectedEdition() {
+  const el = document.querySelector("input[name='edition']:checked");
+  return el ? el.value : 'base';
+}
+
+function buildPendingJokerSelection() {
+  return {
+    jokerId: pendingJokerId,
+    edition: getSelectedEdition(), // 'base'|'foil'|'holographic'|'polychrome'|'negative'
+    stickers: {
+      perishable: !!document.getElementById('tagPerishable')?.checked,
+      eternal:    !!document.getElementById('tagEternal')?.checked,
+      rental:     !!document.getElementById('tagRental')?.checked
+    }
+  };
+}
+  function loadRuns() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveRuns(runs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(runs));
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${m}/${d}/${y}`;
+  }
+
+  function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>'"]/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+
+
+function renderJokerCardHtml(jokerObj, imgClass, wrapClass) {
+  const jokerId = jokerObj?.jokerId ?? jokerObj; // supports legacy ID-only runs
+  const j = JOKERS.find(x => normId(x.id) === normId(jokerId));
+  if (!j) return '';
+
+  const edition = (jokerObj?.edition || 'base').toLowerCase();
+  const imgSrc = getEditionImgPath(jokerId, edition) || j.img;
+
+  const stickerFlags = jokerObj?.stickers || jokerObj?.mods || {};
+  const active = ['perishable', 'eternal', 'rental'].filter(k => !!stickerFlags[k]);
+
+  const stickerImgs = active.map(k =>
+    `<img class='sticker' src='${escapeHtml(STICKERS[k].img)}' alt='' />`
+  ).join('');
+
+  return `
+    <div class='${wrapClass}'>
+      <div class='cardWrap'>
+        <img class='${imgClass}' src='${escapeHtml(imgSrc)}' alt='' />
+        ${stickerImgs}
+      </div>
+      <div class='runJokerName'>${escapeHtml(j.name)}</div>
+    </div>
+  `;
+}
+
+
+
+  // -----------------------------
+  // 3) UI state
+  // -----------------------------
+  let selectedJokers = [];
+  let runs = loadRuns();
+  let pendingJokerId = null;
+  // -----------------------------
+  // 4) Populate deck select
+  // -----------------------------
+  const deckSelect = document.getElementById('deckSelect');
+  DECKS.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = d.name;
+    deckSelect.appendChild(opt);
+  });
+
+  const deckPreview = document.getElementById('deckPreview');
+
+function renderDeckPreview() {
+  const deckId = normId(deckSelect.value);
+  const d = DECKS.find(x => normId(x.id) === deckId);
+
+  if (!d) {
+    deckPreview.innerHTML = `<span class='small'>No deck selected.</span>`;
+    return;
+  }
+
+  deckPreview.innerHTML = `
+    <img class='thumb' src='${escapeHtml(d.img)}' alt='' />
+    <span class='deckPreviewName'>${escapeHtml(d.name)}</span>
+  `;
+}
+
+deckSelect.addEventListener('change', renderDeckPreview);
+renderDeckPreview(); // initial render
+
+
+  // Default date = today
+  const runDate = document.getElementById('runDate');
+  runDate.valueAsDate = new Date();
+
+  // -----------------------------
+  // 5) Joker picker
+  // -----------------------------
+  const jokerPicker = document.getElementById('jokerPicker');
+  const jokerFilter = document.getElementById('jokerFilter');
+  const selectedJokersBox = document.getElementById('selectedJokers');
+
+    function renderSelectedJokers() {
+    if (selectedJokers.length === 0) {
+    selectedJokersBox.innerHTML = `<div class='empty'>No jokers selected yet.</div>`;
+    return;
+    }
+
+
+    const cards = selectedJokers.map((obj, idx) => {
+    // clickable to remove this exact copy
+    const html = renderJokerCardHtml(obj, 'cardThumb', 'runJokerCard');
+    return `<div data-remove-index='${idx}' title='Click to remove this joker'>${html}</div>`;
+    }).join('');
+
+
+    selectedJokersBox.innerHTML = cards;
+
+
+    selectedJokersBox.querySelectorAll('[data-remove-index]').forEach(el => {
+    el.addEventListener('click', () => {
+    const idx = parseInt(el.getAttribute('data-remove-index'), 10);
+    if (!Number.isNaN(idx)) {
+    selectedJokers.splice(idx, 1);
+    renderSelectedJokers();
+    }
+    });
+    });
+    }
+
+function renderJokerPicker() {
+  if (!jokerPicker) return;
+
+  const q = (jokerFilter?.value || '').toLowerCase().trim();
+
+  const list = JOKERS.filter(j => {
+    const name = (j.name || '').toString().toLowerCase();
+    return !q || name.includes(q);
+  });
+
+  jokerPicker.innerHTML = list.map(j => `
+    <button class='jokerBtn' type='button' data-add='${escapeHtml(j.id)}'>
+      <img class='thumb' src='${escapeHtml(j.img)}' alt='' />
+      <div class='name'>${escapeHtml(j.name || '')}</div>
+    </button>
+  `).join('');
+
+  jokerPicker.querySelectorAll('[data-add]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = normId(btn.getAttribute('data-add'));
+      openJokerModal(id);
+    });
+  });
+}
+
+
+  jokerFilter.addEventListener('input', renderJokerPicker);
+  renderJokerPicker();       // initial render so all jokers show immediately
+  renderSelectedJokers();    // optional: show “No jokers selected yet.” immediately
+
+
+  // -----------------------------
+  // 6) Runs table
+  // -----------------------------
+  const runsTbody = document.getElementById('runsTbody');
+  const tableFilter = document.getElementById('tableFilter');
+  const statsLine = document.getElementById('statsLine');
+
+function renderRunsTable() {
+  // const q = (tableFilter.value || '').toLowerCase().trim();
+
+  const filtered = runs.filter(r => {
+    const deck = DECKS.find(d => normId(d.id) === normId(r.deckId));
+    const runJokers = Array.isArray(r.jokers) ? r.jokers : [];
+
+    const jokerNames = runJokers
+      .map(obj => {
+        const jid = obj?.jokerId ?? obj; // supports old runs if any slipped in
+        return (JOKERS.find(j => normId(j.id) === normId(jid))?.name || '');
+      })
+      .join(' ');
+
+    const hay = `${r.runNumber} ${r.date} ${deck?.name || ''} ${jokerNames}`.toLowerCase();
+    const raw = (tableFilter.value || '').toLowerCase();
+    const terms = raw
+    .split('+')
+    .map(t => t.trim())
+    .filter(Boolean);
+  //  return !q || hay.includes(q);
+  return terms.length === 0 || terms.every(term => hay.includes(term));
+
+  });
+
+  statsLine.textContent = `Runs: ${runs.length} (showing ${filtered.length})`;
+
+  runsTbody.innerHTML = filtered.map(r => {
+    const deck = DECKS.find(d => normId(d.id) === normId(r.deckId));
+    const runJokers = Array.isArray(r.jokers) ? r.jokers : [];
+
+    const jokerPills = runJokers.map(obj => {
+      // Preferred path: supports stickers + edition image
+      if (typeof renderJokerCardHtml === 'function') {
+        return renderJokerCardHtml(obj, 'cardThumb', 'runJokerCard');
+      }
+
+      // Fallback: no stickers, just render the base joker
+      const jid = obj?.jokerId ?? obj;
+      const j = JOKERS.find(x => normId(x.id) === normId(jid));
+      if (!j) return '';
+      return `
+        <div class='runJokerCard'>
+          <img class='cardThumb' src='${escapeHtml(j.img)}' alt='' />
+          <div class='runJokerName'>${escapeHtml(j.name)}</div>
+        </div>
+      `;
+    }).join('');
+
+    const deckCell = deck
+      ? `<span class='deckCell'>
+           <img class='cardThumb' src='${escapeHtml(deck.img)}' alt='' />
+           <span>${escapeHtml(deck.name)}</span>
+         </span>`
+      : '';
+
+    return `
+      <tr>
+        <td>${r.runNumber}</td>
+        <td>${escapeHtml(fmtDate(r.date))}</td>
+        <td>${jokerPills || `<span class='small'>—</span>`}</td>
+        <td>${deckCell}</td>
+        <td class='actionsCell'>
+          <button type='button' class='editBtn' data-edit='${escapeHtml(r.id)}' title='Edit run'>Edit</button>
+          <button type='button' class='moveBtn' data-up='${escapeHtml(r.id)}' title='Move up'>▲</button>
+          <button type='button' class='moveBtn' data-down='${escapeHtml(r.id)}' title='Move down'>▼</button>
+          <button type='button' class='deleteBtn' data-del='${escapeHtml(r.id)}'
+            aria-label='Delete run ${r.runNumber}' title='Delete run'>×</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Delete
+  runsTbody.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-del');
+      runs = runs.filter(r => r.id !== id);
+      saveRuns(runs);
+      renderRunsTable();
+    });
+  });
+
+  // Move up/down
+  runsTbody.querySelectorAll('[data-up]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-up');
+      moveRun(id, 'up'); // you define moveRun elsewhere
+    });
+  });
+
+  runsTbody.querySelectorAll('[data-down]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-down');
+      moveRun(id, 'down'); // you define moveRun elsewhere
+    });
+  });
+
+  // Edit
+  runsTbody.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-edit');
+      startEditRun(id); // you define startEditRun elsewhere
+    });
+  });
+}
+
+
+  tableFilter.addEventListener('input', renderRunsTable);
+
+  // -----------------------------
+  // 7) Add run + import/export
+  // -----------------------------
+document.getElementById('addRunBtn').addEventListener('click', () => {
+  const date = runDate.value;
+  const deckId = normId(deckSelect.value);
+
+  if (editingRunId) {
+    const idx = runs.findIndex(r => r.id === editingRunId);
+    if (idx < 0) return;
+
+    runs[idx] = {
+      ...runs[idx],
+      date,
+      deckId,
+      jokers: selectedJokers.slice()
+      // runNumber preserved automatically
+    };
+
+    editingRunId = null;
+    document.getElementById('addRunBtn').textContent = 'Add Run';
+
+  } else {
+    const nextRunNumber = (runs.reduce((m, r) => Math.max(m, r.runNumber || 0), 0) || 0) + 1;
+
+    const newRun = {
+      id: crypto.randomUUID(),
+      runNumber: nextRunNumber,
+      date,
+      deckId,
+      jokers: selectedJokers.slice(),
+      createdAt: new Date().toISOString()
+    };
+
+    runs.unshift(newRun);
+  }
+
+  saveRuns(runs);
+
+  selectedJokers = [];
+  renderSelectedJokers();
+  renderRunsTable();
+});
+
+
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(runs, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'balatro_runs_export.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  const importFile = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', () => importFile.click());
+
+  importFile.addEventListener('change', async () => {
+    const f = importFile.files?.[0];
+    if (!f) return;
+    try {
+      const text = await f.text();
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) throw new Error('JSON must be an array of runs.');
+      // Minimal validation
+      runs = data.filter(x => x && typeof x === 'object');
+      saveRuns(runs);
+      renderRunsTable();
+    } catch (e) {
+      alert(`Import failed: ${e.message || e}`);
+    } finally {
+      importFile.value = '';
+    }
+  });
+
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    if (!confirm('Clear all runs? This cannot be undone (unless you exported).')) return;
+    runs = [];
+    saveRuns(runs);
+    renderRunsTable();
+  });
+
+const jokerModalBackdrop = document.getElementById('jokerModalBackdrop');
+const jokerModalPreview  = document.getElementById('jokerModalPreview');
+const jokerModalClose    = document.getElementById('jokerModalClose');
+const jokerModalAdd      = document.getElementById('jokerModalAdd');
+
+function renderJokerModalPreview() {
+  if (!pendingJokerId) return;
+  const obj = buildPendingJokerSelection();
+  jokerModalPreview.innerHTML = renderJokerCardHtml(obj, 'cardThumb', 'runJokerCard');
+}
+
+function openJokerModal(jokerId) {
+  pendingJokerId = normId(jokerId);
+
+  // reset sticker checkboxes
+  const a = document.getElementById('tagPerishable');
+  const b = document.getElementById('tagEternal');
+  const c = document.getElementById('tagRental');
+  if (a) a.checked = false;
+  if (b) b.checked = false;
+  if (c) c.checked = false;
+
+  // reset edition to base
+  const baseRadio = document.querySelector("input[name='edition'][value='base']");
+  if (baseRadio) baseRadio.checked = true;
+
+  renderJokerModalPreview();
+  jokerModalBackdrop.style.display = 'flex';
+}
+
+function closeJokerModal() {
+  pendingJokerId = null;
+  jokerModalBackdrop.style.display = 'none';
+}
+
+const tagPerishable = document.getElementById('tagPerishable');
+const tagEternal    = document.getElementById('tagEternal');
+const tagRental     = document.getElementById('tagRental');
+
+function enforceStickerRules(changedId) {
+  // Perishable and Eternal cannot both be true
+  if (changedId === 'tagPerishable' && tagPerishable?.checked) {
+    if (tagEternal) tagEternal.checked = false;
+  }
+  if (changedId === 'tagEternal' && tagEternal?.checked) {
+    if (tagPerishable) tagPerishable.checked = false;
+  }
+
+  renderJokerModalPreview();
+}
+
+if (tagPerishable) tagPerishable.addEventListener('change', () => enforceStickerRules('tagPerishable'));
+if (tagEternal)    tagEternal.addEventListener('change', () => enforceStickerRules('tagEternal'));
+if (tagRental)     tagRental.addEventListener('change', renderJokerModalPreview);
+
+
+
+document.querySelectorAll("input[name='edition']").forEach(el => {
+  el.addEventListener('change', renderJokerModalPreview);
+});
+
+// Close handlers
+if (jokerModalClose) jokerModalClose.addEventListener('click', closeJokerModal);
+jokerModalBackdrop.addEventListener('click', (e) => {
+  if (e.target === jokerModalBackdrop) closeJokerModal();
+});
+
+// Add handler
+jokerModalAdd.addEventListener('click', () => {
+  if (!pendingJokerId) return;
+
+  const sel = buildPendingJokerSelection();
+  selectedJokers.push(sel); // duplicates OK
+
+  closeJokerModal();
+  renderSelectedJokers();
+});
+
+
+  // -----------------------------
+  // 8) Initial render
+  // -----------------------------
+ renderSelectedJokers();
+renderJokerPicker();
+  renderRunsTable();
+  if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(console.error);
+  });
+}
+</script>
+</body>
+</html>

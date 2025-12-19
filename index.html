@@ -27,14 +27,15 @@
     .row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; margin: 8px 0; align-items: center; }
     label { color: var(--muted); font-size: 12px; }
     input[type='date'], input[type='text'], select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px;  background: var(--panel2);  color: var(--text);  border-color: var(--border); }
-    button { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #fff; }
-    button.primary { background: #111; color: #fff; border-color: #111; }
+    button { padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #fff; background: var(--panel2);  color: var(--text);  border-color: var(--border);}
+    button.primary { background: #111; color: #fff; border-color: #111;background: #e9eaec;  color: #111;  border-color: #e9eaec; }
     button.danger { border-color: #d33; color: #d33; }
     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
-    th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; }
-    .thumb { width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #fafafa; }
+    table { width: 100%; border-collapse: collapse; background: transparent; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top;border-bottom-color: var(--border); }
+    th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600;color: var(--muted); }
+    .thumb { width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #fafafa;   background: #0b0c0e;
+  border-color: var(--border);}
     .pill { display: inline-flex; align-items: flex-start; gap: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px 6px 6px; margin: 3px 6px 3px 0; background: #fff; }
     .pill span { font-size: 12px; }
     .deckCell { display: inline-flex; align-items: center; gap: 10px; }
@@ -103,7 +104,8 @@
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-
+ background: var(--panel2);
+  border-color: var(--border);
   padding: 8px 6px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -113,7 +115,7 @@
   overflow: hidden; /* prevents name bleed */
 }
 
-.jokerBtn:hover { border-color: #bbb; }
+.jokerBtn:hover { border-color: #bbb;  border-color: #3a4250;}
 .runJokersRow{
   display: flex;
   flex-direction: row;
@@ -127,7 +129,8 @@
 }
 
 /* Prevent joker cards from shrinking into weird columns */
-.runJokersRow .runJokerCard{
+.runJokersRow .runJokerCard{ background: var(--panel2);
+  border-color: var(--border);
   flex: 0 0 auto;         /* key: keep each card its size */
 }
 .jokerBtn .thumb {
@@ -1194,6 +1197,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

@@ -20,7 +20,7 @@
     --text: #e9eaec;
     --muted: #a8adb7;
     --border: #2a2f38; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px;   background: var(--bg);  color: var(--text); }
     h1 { margin: 0 0 10px 0; font-size: 22px; }
     .grid { display: grid; grid-template-columns: 560px 1fr; gap: 16px; align-items: start; }
     .card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
@@ -114,7 +114,22 @@
 }
 
 .jokerBtn:hover { border-color: #bbb; }
+.runJokersRow{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;      /* key: do not wrap to next line */
+  gap: 10px;
+  align-items: flex-start;
+  overflow-x: auto;       /* key: scroll sideways if needed */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;    /* gives room so scrollbar doesn't overlap content */
+}
 
+/* Prevent joker cards from shrinking into weird columns */
+.runJokersRow .runJokerCard{
+  flex: 0 0 auto;         /* key: keep each card its size */
+}
 .jokerBtn .thumb {
   display: block;
   width: 50px;
@@ -297,9 +312,15 @@ align-items: center;
   .jokerPicker { max-height: 45vh; }
   table { display: block; overflow-x: auto; }
   th, td { padding: 8px; }
+    .runJokersRow .cardThumb{
+    width: 54px;
+    height: calc(54px * 1.4);
+  }
+  .runJokersRow .runJokerCard{
+    width: 72px;
+  }
 }
 
- 
     .selectedBox { border: 1px dashed #aaa; border-radius: 10px; padding: 8px; min-height: 54px; }
     .selectedBox .empty { color: var(--muted); font-size: 12px; }
     .deckPreviewName { font-size: 15px; color: #222; }
@@ -944,7 +965,8 @@ function renderRunsTable() {
       <tr>
         <td>${r.runNumber}</td>
         <td>${escapeHtml(fmtDate(r.date))}</td>
-        <td>${jokerPills || `<span class='small'>—</span>`}</td>
+        <td>  ${jokerPills ? `<div class='runJokersRow'>${jokerPills}</div>` : `<span class='small'>—</span>`  }
+</td>
         <td>${deckCell}</td>
         <td class='actionsCell'>
           <button type='button' class='editBtn' data-edit='${escapeHtml(r.id)}' title='Edit run'>Edit</button>
@@ -1172,5 +1194,6 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 

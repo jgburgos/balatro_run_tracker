@@ -132,7 +132,7 @@
   border-color: var(--border);
   flex: 0 0 auto;         /* key: keep each card its size */
 }
-.jokerBtn .thumb {
+.jokerBtn .thumb { 
   display: block;
   width: 44px;
   height: 62px;
@@ -328,6 +328,98 @@ align-items: center;
     .selectedBox { border: 1px dashed #aaa; border-radius: 10px; padding: 8px; min-height: 54px; }
     .selectedBox .empty { color: var(--muted); font-size: 12px; }
     .deckPreviewName { font-size: 15px; color: #222; }
+
+    /* =========================
+   Mobile layout overrides
+   ========================= */
+@media (max-width: 820px){
+  body { margin: 12px; }
+
+  /* Desktop two-column grid -> single column */
+  .grid{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Your label/value row layout is too wide for phone; stack label above input */
+  .row{
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin: 10px 0;
+  }
+
+  /* Make label a bit clearer when stacked */
+  .row > label{
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Inputs are fine at 100%, but reduce perceived “waste” by tightening */
+  input[type='date'], input[type='text'], select{
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Tighten the toolbar buttons so they don’t force weird wrapping */
+  .toolbar{
+    gap: 8px;
+  }
+  .toolbar button{
+    padding: 10px 12px;
+  }
+
+  @media (max-width: 820px){
+  .jokerPicker{
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 bigger columns */
+    max-height: 52vh;   /* uses screen height better */
+  }
+
+  .jokerBtn{
+    padding: 8px 6px;
+  }
+
+  .jokerBtn .thumb{
+    width: 56px;
+    height: calc(56px * 1.4);
+  }
+
+  .jokerBtn .name{
+    font-size: 11px;
+  }
+}
+@media (max-width: 820px){
+  .modalCard{
+    width: min(520px, 96vw);
+    max-height: 92vh;           /* key */
+    overflow: hidden;           /* keep header fixed within card */
+  }
+
+  .modalBody{
+    grid-template-columns: 1fr; /* stack preview and options */
+    gap: 10px;
+    max-height: calc(92vh - 56px); /* minus header height */
+    overflow: auto;             /* key: allow scrolling inside modal */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modalPreview{
+    justify-content: center;
+  }
+
+  .modalGrid{
+    grid-template-columns: 1fr; /* stickers then edition vertically */
+  }
+}
+
+
+  /* Runs table: allow horizontal scroll rather than squish everything */
+  .card table{
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -1198,6 +1290,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

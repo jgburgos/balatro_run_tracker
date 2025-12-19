@@ -13,7 +13,13 @@
     *, *::before, *::after {
    box-sizing: border-box;
 }
-    :root { --border:#e6e6e6; --muted:#666; }
+    :root {   
+      --bg: #0f1012;
+    --panel: #16181c;
+    --panel2: #121418;
+    --text: #e9eaec;
+    --muted: #a8adb7;
+    --border: #2a2f38; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; }
     h1 { margin: 0 0 10px 0; font-size: 22px; }
     .grid { display: grid; grid-template-columns: 560px 1fr; gap: 16px; align-items: start; }
@@ -1166,4 +1172,5 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 

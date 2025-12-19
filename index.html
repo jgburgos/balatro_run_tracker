@@ -113,7 +113,6 @@
 
   overflow: hidden; /* prevents name bleed */
 }
-
 .jokerBtn:hover { border-color: #bbb;  border-color: #3a4250;}
 .runJokersRow{
   display: flex;
@@ -138,11 +137,20 @@
   height: 62px;
   object-fit: contain;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 38px;
   background:  transparent;
     border-width: 1px; 
 }
 
+.deckThumb{
+  width: 56px;                      
+  height: calc(56px * 1.4);
+  object-fit: contain;
+
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+}
 .jokerBtn .name {
   width: 100%;
   text-align: center;
@@ -1050,12 +1058,13 @@ function renderRunsTable() {
       `;
     }).join('');
 
-    const deckCell = deck
-      ? `<span class='deckCell'>
-           <img class='cardThumb' src='${escapeHtml(deck.img)}' alt='' />
-           <span>${escapeHtml(deck.name)}</span>
-         </span>`
-      : '';
+  const deckCell = deck
+    ? `<span class='deckCell'>
+         <img class='deckThumb' src='${escapeHtml(deck.img)}' alt='' />
+         <span>${escapeHtml(deck.name)}</span>
+       </span>`
+    : '';
+
 
     return `
       <tr>
@@ -1290,6 +1299,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

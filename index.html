@@ -89,6 +89,11 @@
   /* prevent table blowout */
   word-break: break-word;
 }
+  .deckCell{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;     /* was 10px */
+}
 
 .actionsCell { white-space: nowrap; }
 .moveBtn { width: 32px; padding: 6px 0; }
@@ -381,7 +386,9 @@ align-items: center;
     grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 bigger columns */
     max-height: 52vh;   /* uses screen height better */
   }
-
+  .deckCell span{
+    font-size: 12px;
+  }
   .jokerBtn{
     padding: 8px 6px;
   }
@@ -581,21 +588,21 @@ align-items: center;
   // Update these lists to match your PNG filenames.
   // Tip: keep ids stable; names can be changed anytime.
 const DECKS = [
-  {"id": 1, "name": "Red", "img": "assets/decks/1_red_deck.png"},
-  {"id": 2, "name": "Blue", "img": "assets/decks/2_blue_deck.png"},
-  {"id": 3, "name": "Yellow", "img": "assets/decks/3_yellow_deck.png"},
-  {"id": 4, "name": "Green", "img": "assets/decks/4_green_deck.png"},
-  {"id": 5, "name": "Black", "img": "assets/decks/5_black_deck.png"},
-  {"id": 6, "name": "Magic", "img": "assets/decks/6_magic_deck.png"},
-  {"id": 7, "name": "Nebula", "img": "assets/decks/7_nebula_deck.png"},
-  {"id": 8, "name": "Ghost", "img": "assets/decks/8_ghost_deck.png"},
-  {"id": 9, "name": "Abandoned", "img": "assets/decks/9_abandoned_deck.png"},
-  {"id": 10, "name": "Checkered", "img": "assets/decks/10_checkered_deck.png"},
-  {"id": 11, "name": "Zodiac", "img": "assets/decks/11_zodiac_deck.png"},
-  {"id": 12, "name": "Painted", "img": "assets/decks/12_painted_deck.png"},
-  {"id": 13, "name": "Anaglyph", "img": "assets/decks/13_anaglyph_deck.png"},
-  {"id": 14, "name": "Plasma", "img": "assets/decks/14_plasma_deck.png"},
-  {"id": 15, "name": "Erratic", "img": "assets/decks/15_erratic_deck.png"},
+  {"id": 1, "name": "Red Deck", "img": "assets/decks/1_red_deck.png"},
+  {"id": 2, "name": "Blue Deck", "img": "assets/decks/2_blue_deck.png"},
+  {"id": 3, "name": "Yellow Deck", "img": "assets/decks/3_yellow_deck.png"},
+  {"id": 4, "name": "Green Deck", "img": "assets/decks/4_green_deck.png"},
+  {"id": 5, "name": "Black Deck", "img": "assets/decks/5_black_deck.png"},
+  {"id": 6, "name": "Magic Deck", "img": "assets/decks/6_magic_deck.png"},
+  {"id": 7, "name": "Nebula Deck", "img": "assets/decks/7_nebula_deck.png"},
+  {"id": 8, "name": "Ghost Deck", "img": "assets/decks/8_ghost_deck.png"},
+  {"id": 9, "name": "Abandoned Deck", "img": "assets/decks/9_abandoned_deck.png"},
+  {"id": 10, "name": "Checkered Deck", "img": "assets/decks/10_checkered_deck.png"},
+  {"id": 11, "name": "Zodiac Deck", "img": "assets/decks/11_zodiac_deck.png"},
+  {"id": 12, "name": "Painted Deck", "img": "assets/decks/12_painted_deck.png"},
+  {"id": 13, "name": "Anaglyph Deck", "img": "assets/decks/13_anaglyph_deck.png"},
+  {"id": 14, "name": "Plasma Deck", "img": "assets/decks/14_plasma_deck.png"},
+  {"id": 15, "name": "Erratic Deck", "img": "assets/decks/15_erratic_deck.png"},
 ];
 
 const JOKERS = [
@@ -1299,6 +1306,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

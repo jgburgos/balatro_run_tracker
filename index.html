@@ -201,8 +201,8 @@ display: inline-block;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.35);
-  display: none;              /* <-- KEY: hidden until opened */
-  align-items: center;
+  display: none;
+  align-items: center;     /* desktop default */
   justify-content: center;
   padding: 16px;
   z-index: 999;
@@ -347,7 +347,15 @@ align-items: center;
    ========================= */
 @media (max-width: 820px){
   body { margin: 12px; }
+  .modalBackdrop{
+    align-items: flex-start;     /* move modal to top */
+    justify-content: center;
+    padding-top: 72px;           /* space below header/editor */
+  }
 
+  .modalCard{
+    width: min(92vw, 520px);
+  }
   /* Desktop two-column grid -> single column */
   .grid{
     grid-template-columns: 1fr;
@@ -1341,6 +1349,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

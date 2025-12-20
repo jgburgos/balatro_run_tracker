@@ -482,47 +482,28 @@ align-items: center;
       </div>
     </div>
 
-<div class='card'>
-  <div class='toolbar' style='margin-bottom:10px;'>
-    
-
-
-  <div id='runEditor'>
-    <!-- Date -->
-    <div class='row'>
-      <label for='runDate'>Date</label>
-      <input id='runDate' type='date' />
-    </div>
-
-    <!-- Deck -->
-    <div class='row' style='align-items:start;'>
-      <label for='deckSelect'>Deck</label>
-      <div>
-        <select id='deckSelect'></select>
-        <div id='deckPreview' class='hint'></div>
+    <div class='card'>
+      <div class='toolbar'>
+        <input class='search' id='tableFilter' type='text' placeholder='Search runs (deck/jokers/date)...' />
+        <button class='danger' id='clearAllBtn'>Clear All</button>
       </div>
-    </div>
+      <div class='small' id='statsLine' style='margin: 8px 0 0;'></div>
 
-    <!-- Selected Jokers -->
-    <div class='row'>
-      <label>Selected Jokers</label>
-      <div class='selectedBox' id='selectedJokers'></div>
-    </div>
-
-    <!-- Picker -->
-    <div class='row' style='align-items:start;'>
-      <label>Pick Jokers</label>
-      <div>
-        <input id='jokerFilter' type='text' placeholder='Search Jokers' />
-        <div class='jokerPicker' id='jokerPicker'></div>
-      </div>
-    </div>
-
-    <div class='toolbar'>
-      <button class='primary' id='addRunBtn'>Add Run</button>
+      <table>
+        <thead>
+          <tr>
+            <th style='width:70px;'>Run</th>
+            <th style='width:120px;'>Date</th>
+            <th>Jokers</th>
+            <th style='width:220px;'>Deck</th>
+            <th style='width:160px;'>Actions</th>
+           
+          </tr>
+        </thead>
+        <tbody id='runsTbody'></tbody>
+      </table>
     </div>
   </div>
-</div>
 
 
 
@@ -1326,6 +1307,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

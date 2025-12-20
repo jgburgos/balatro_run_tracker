@@ -434,9 +434,7 @@ align-items: center;
     -webkit-overflow-scrolling: touch;
   }
 }
-#runEditor.isHidden{
-  display: none;
-}
+
   </style>
 </head>
 <body>
@@ -1313,26 +1311,6 @@ jokerModalAdd.addEventListener('click', () => {
   closeJokerModal();
   renderSelectedJokers();
 });
-// -----------------------------
-// Collapsible Run Editor
-// -----------------------------
-const toggleEditorBtn = document.getElementById('toggleEditorBtn');
-const runEditor = document.getElementById('runEditor');
-
-function setEditorOpen(isOpen){
-  if (!runEditor) return;
-
-  runEditor.classList.toggle('isHidden', !isOpen);
-  if (toggleEditorBtn) toggleEditorBtn.textContent = isOpen ? 'Hide Run Editor' : 'Show Run Editor';
-}
-
-// Default: collapsed on small screens, open on desktop
-setEditorOpen(window.matchMedia('(max-width: 820px)').matches ? false : true);
-
-toggleEditorBtn?.addEventListener('click', () => {
-  const isHidden = runEditor.classList.contains('isHidden');
-  setEditorOpen(isHidden); // if hidden -> open
-});
 
 
   // -----------------------------
@@ -1348,6 +1326,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

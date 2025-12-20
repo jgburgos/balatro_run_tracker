@@ -435,74 +435,91 @@ align-items: center;
   }
 }
 
+#runEditor.isHidden { display: none; }
+    
   </style>
 </head>
 <body>
   <h1>Balatro Gold Stake Tracker</h1>
 
   <div class='grid'>
-    <div class='card'>
-      <div class='row'>
-        <label for='runDate'>Date</label>
-        <input id='runDate' type='date' />
-      </div>
 
-<div class='row' style='align-items:start;'>
-  <label for='deckSelect'>Deck</label>
-  <div>
-    <select id='deckSelect'></select>
-    <div id='deckPreview' class='hint' style='margin-top:8px; display:flex; align-items:center; gap:10px;'></div>
+   <div class='card'>
+
+  <!-- NEW: toggle button (stays visible even when editor collapses) -->
+  <div class='toolbar' style='margin-bottom:10px;'>
+    <button type='button' id='toggleEditorBtn'>Show Run Editor</button>
   </div>
+
+  <!-- NEW: wrapper that will collapse/expand -->
+  <div id='runEditor'>
+
+    <div class='row'>
+      <label for='runDate'>Date</label>
+      <input id='runDate' type='date' />
+    </div>
+
+    <div class='row' style='align-items:start;'>
+      <label for='deckSelect'>Deck</label>
+      <div>
+        <select id='deckSelect'></select>
+        <div id='deckPreview' class='hint' style='margin-top:8px; display:flex; align-items:center; gap:10px;'></div>
+      </div>
+    </div>
+
+    <div class='row'>
+      <label>Selected Jokers</label>
+      <div class='selectedBox' id='selectedJokers'></div>
+    </div>
+
+    <div class='row' style='align-items:start;'>
+      <label>Pick Jokers</label>
+      <div>
+        <input id='jokerFilter' type='text' placeholder='Search Jokers' />
+        <div class='hint'>Click a joker to add. Click a selected joker pill to remove.</div>
+        <div class='jokerPicker' id='jokerPicker'></div>
+      </div>
+    </div>
+
+    <div class='toolbar'>
+      <button class='primary' id='addRunBtn'>toggle</button>
+      <button id='exportBtn'>Export JSON</button>
+      <button id='importBtn'>Import JSON</button>
+      <input id='importFile' type='file' accept='application/json' style='display:none;' />
+    </div>
+
+    <div class='hint'>
+      Data is stored locally in your browser (offline). Export/import lets you back it up or move machines.
+    </div>
+
+  </div> <!-- /#runEditor -->
+</div>
+ 
+
+<div class='card'>
+  <div class='toolbar'>
+    <input class='search' id='tableFilter'
+           type='text'
+           placeholder='Search runs (deck/jokers/date)...' />
+    <button class='danger' id='clearAllBtn'>Clear All</button>
+  </div>
+
+  <div class='small' id='statsLine'></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style='width:70px;'>Run</th>
+        <th style='width:120px;'>Date</th>
+        <th>Jokers</th>
+        <th style='width:180px;'>Deck</th>
+        <th style='width:140px;'>Actions</th>
+      </tr>
+    </thead>
+    <tbody id='runsTbody'></tbody>
+  </table>
 </div>
 
-      <div class='row'>
-        <label>Selected Jokers</label>
-        <div class='selectedBox' id='selectedJokers'></div>
-      </div>
-
-      <div class='row' style='align-items:start;'>
-        <label>Pick Jokers</label>
-        <div>
-          <input id='jokerFilter' type='text' placeholder='Search Jokers' />
-          <div class='hint'>Click a joker to add. Click a selected joker pill to remove.</div>
-          <div class='jokerPicker' id='jokerPicker'></div>
-        </div>
-      </div>
-
-      
-      <div class='toolbar'>
-        <button class='primary' id='addRunBtn'>Add Run</button>
-        <button id='exportBtn'>Export JSON</button>
-        <button id='importBtn'>Import JSON</button>
-        <input id='importFile' type='file' accept='application/json' style='display:none;' />
-      </div>
-
-      <div class='hint'>
-        Data is stored locally in your browser (offline). Export/import lets you back it up or move machines.
-      </div>
-    </div>
-
-    <div class='card'>
-      <div class='toolbar'>
-        <input class='search' id='tableFilter' type='text' placeholder='Search runs (deck/jokers/date)...' />
-        <button class='danger' id='clearAllBtn'>Clear All</button>
-      </div>
-      <div class='small' id='statsLine' style='margin: 8px 0 0;'></div>
-
-      <table>
-        <thead>
-          <tr>
-            <th style='width:70px;'>Run</th>
-            <th style='width:120px;'>Date</th>
-            <th>Jokers</th>
-            <th style='width:220px;'>Deck</th>
-            <th style='width:160px;'>Actions</th>
-           
-          </tr>
-        </thead>
-        <tbody id='runsTbody'></tbody>
-      </table>
-    </div>
   </div>
 
 
@@ -1293,7 +1310,24 @@ jokerModalAdd.addEventListener('click', () => {
   renderSelectedJokers();
 });
 
+// -----------------------------
+// Editor toggle (AFTER elements exist)
+// -----------------------------
+const toggleEditorBtn = document.getElementById('toggleEditorBtn');
+const runEditor = document.getElementById('runEditor');
 
+function setEditorOpen(isOpen){
+  runEditor.classList.toggle('isHidden', !isOpen);
+  toggleEditorBtn.textContent = isOpen ? 'Hide Run Editor' : 'Show Run Editor';
+}
+
+// Default: collapsed on mobile, open on desktop
+setEditorOpen(window.matchMedia('(max-width: 820px)').matches ? false : true);
+
+toggleEditorBtn.addEventListener('click', () => {
+  const isHidden = runEditor.classList.contains('isHidden');
+  setEditorOpen(isHidden);
+});
   // -----------------------------
   // 8) Initial render
   // -----------------------------
@@ -1307,6 +1341,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 

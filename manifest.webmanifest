@@ -1,6 +1,6 @@
 {
   "name": "Balatro Run Tracker",
-  "short_name": "Balatro Runner",
+  "short_name": "Runner",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,4 +11,5 @@
     { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
+
 

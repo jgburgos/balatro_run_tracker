@@ -120,15 +120,16 @@
 }
 .jokerBtn:hover { border-color: #bbb;  border-color: #3a4250;}
 .runJokersRow{
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;      /* key: do not wrap to next line */
+  display:grid;
+  /*flex-direction: row;
+  /*flex-wrap: nowrap;      /* key: do not wrap to next line */
+  grid-template-columns: repeat(7, max-content);
   gap: 10px;
-  align-items: flex-start;
-  overflow-x: auto;       /* key: scroll sideways if needed */
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 6px;    /* gives room so scrollbar doesn't overlap content */
+  align-items: start;
+  /*overflow-x: auto;       /* key: scroll sideways if needed */
+  /*overflow-y: hidden;
+  /*-webkit-overflow-scrolling: touch;
+  /*padding-bottom: 6px;    /* gives room so scrollbar doesn't overlap content */
 }
 
 /* Prevent joker cards from shrinking into weird columns */
@@ -1347,6 +1348,7 @@ navigator.serviceWorker.register('./sw.js')
 </script>
 </body>
 </html>
+
 
 
 
